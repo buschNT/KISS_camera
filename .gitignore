@@ -1,5 +1,9 @@
 # Custom
 spinnaker/
+example/
+TODO/
+
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
