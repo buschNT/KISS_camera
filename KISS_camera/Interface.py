@@ -1,4 +1,3 @@
-# import
 import PySpin
 
 class Interface:

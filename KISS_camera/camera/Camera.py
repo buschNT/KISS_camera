@@ -1,4 +1,3 @@
-# import
 from ..System import System, PySpin
 from ..Image import Image
 
