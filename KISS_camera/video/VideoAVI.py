@@ -2,26 +2,19 @@
 import PySpin
 from.Video import Video
 
-class AVI_option:
-    def __init__(
-        self,
-        frame_rate
-    ):
-        self.option = PySpin.AVIOption()
-        self.option.frameRate = frame_rate
-
 class VideoAVI(Video):
     def __init__(
         self,
         filename,
-        frame_rate
+        frame_rate,
+        maximum_file_size = None
     ):
-        option = AVI_option(
-            frame_rate = frame_rate
-        )
+        option = PySpin.AVIOption()
+        option.frameRate = frame_rate
 
         Video.__init__(
             self,
             filename = filename,
-            option = option
+            option = option,
+            maximum_file_size = maximum_file_size
         )

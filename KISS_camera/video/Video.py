@@ -1,4 +1,5 @@
 # import
+import os
 import PySpin
 
 class Video:
@@ -8,23 +9,31 @@ class Video:
         option,
         maximum_file_size = None
     ):
+        # check & create path
+        filename = os.path.splitext(filename)[0] # file extensions are added by SpinVideo
+        try:
+            os.makedirs(os.path.dirname(filename))
+        except OSError:
+            pass
+
         # create recorder
-        self.avi_recorder = PySpin.SpinVideo()
+        self.spin_video = PySpin.SpinVideo()
 
         # set maximum_file_size
         if(maximum_file_size is not None):
-            self.avi_recorder.SetMaximumFileSize(maximum_file_size)
+            self.spin_video.SetMaximumFileSize(maximum_file_size)
 
         # open file
-        self.avi_recorder.Open( filename, option.option )
+        self.spin_video.Open(filename, option)
 
     def __del__( self ):
         try:
-            self.avi_recorder.Close()
+            self.spin_video.Close()
         except:
             pass
 
     def __check_filename(self, filename, extension):
+        # TODO: base on option type
         # check extension
         if(not filename.endswith(extension)):
             filename += extension[0]
@@ -39,7 +48,7 @@ class Video:
 
     def add_image(self, image):
         try:
-            self.avi_recorder.Append(image.image)
+            self.spin_video.Append(image.image)
         except PySpin.SpinnakerException as e:
             print(e)
             return False
