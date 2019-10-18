@@ -96,7 +96,7 @@ class Image:
             format=PySpin.JPEG12_C
         )
 
-    ## spinnaker functions
+    ## spinnaker
     def calculate_channel_statistics(self):
         raise NotImplementedError
 

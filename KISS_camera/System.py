@@ -1,14 +1,15 @@
 import PySpin
 from .Interface import Interface
 
+def get_instance():
+    return PySpin.System.GetInstance()
+
 class System:
     def __init__( self ):
-        # get system instance (singleton)
-        self.system = PySpin.System.GetInstance()
+        self.system = get_instance()    # singleton!
 
     def __del__( self ):
-        # release system
-        self.system.ReleaseInstance()
+        self.release_instance()
     
     def num_interfaces( self ):
         # get interface list
@@ -90,3 +91,61 @@ class System:
         del interface
 
         return camera
+    
+    ## spinnaker
+    def release_instance(self):
+        self.system.ReleaseInstance()
+
+    def get_interfaces(self, update_interface=True):
+        interface_list = self.system.GetInterfaces(update_interface)     # TODO: InterfaceList
+        return interface_list
+
+    def get_cameras(self, update_interfaces=True, update_cameras=True)
+        camera_list = self.system.GetCameras(update_interfaces, update_cameras) # TODO: CameraList
+        return camera_list
+
+    def update_cameras(self, update_interfaces=True)
+        return self.system.UpdateCameras(update_interfaces)
+
+    def update_interface_list(self):
+        self.system.UpdateInterfaceList()
+
+    def register_event(self):
+        raise NotImplementedError
+
+    def unregister_event(self):
+        raise NotImplementedError
+
+    def register_interface_event(self):
+        raise NotImplementedError
+
+    def unregister_interface_event(self):
+        raise NotImplementedError
+
+    def register_logging_event(self):
+        raise NotImplementedError
+
+    def unregister_all_logging_event(self):
+        raise NotImplementedError
+
+    def unregister_logging_event(self):
+        raise NotImplementedError
+
+    def set_logging_event_priority_level(self):
+        raise NotImplementedError
+
+    def get_logging_event_priority_level(self):
+        raise NotImplementedError
+
+    def is_in_use(self):
+        self.system.IsInUse()
+
+    def send_action_command(self):
+        raise NotImplementedError
+
+    def get_library_version(self):
+        library_version = self.system.GetLibraryVersion()
+        return library_version  # return spinnaker structure
+
+    def get_TL_node_map(self):
+        return self.system.GetTLNodeMap()

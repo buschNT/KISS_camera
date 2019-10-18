@@ -24,7 +24,6 @@ class Camera:
         image_datatype = IMAGE_DATATYPE.NUMPY
     ):
         # create system instance if not provided
-        self.system = None
         if( system is None ):
             self.system = System()
         
