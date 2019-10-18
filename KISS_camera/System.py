@@ -6,90 +6,42 @@ def get_instance():
 
 class System:
     def __init__( self ):
-        self.system = get_instance()    # singleton!
+        self.system = get_instance() # singleton!
 
     def __del__( self ):
         self.release_instance()
     
     def num_interfaces( self ):
-        # get interface list
-        interface_list = self.system.GetInterfaces()
-
-        # get number of interfaces
-        num_interfaces = interface_list.GetSize()
-
-        # clear interface list
-        interface_list.Clear()
-
+        interface_list = self.get_interfaces()
+        num_interfaces = len(interface_list)
+        del interface_list
         return num_interfaces
-    
-    def get_interface( self, index ):
-        # get interface list
-        interface_list = self.system.GetInterfaces()
-
-        # get interface
-        try:
-            interface = Interface( interface_list[ index ] )
-        except:
-            interface = None
-
-        # clear interface list
-        interface_list.Clear()
-
-        return interface
 
     def num_cameras( self ):
-        # get camera list
-        cam_list = self.system.GetCameras()
-
-        # get number of cameras
-        num_cameras = cam_list.GetSize()
-
-        # clear camera list
-        cam_list.Clear()
-
+        camera_list = self.get_cameras()
+        num_cameras = len(camera_list)
+        del camera_list
         return num_cameras
 
-    def get_camera_by_index( self, camera_index ):
-        # camera
-        camera = None
-
-        # loop through interfaces
-        for index in range( self.num_interfaces() ):
-            # get interface
-            interface = self.get_interface( index )
-
-            # check for camera
-            camera = interface.get_camera( camera_index )
-            if( camera is None ):
-                continue
-            
-            break
-
-        # release interface
-        del interface
-
+    def get_camera_by_index(self, index):
+        camera_list = self.get_cameras()
+        if(len(camera_list) <= index):
+            camera = None
+        else:
+            camera = camera_list[index]
+        del camera_list
         return camera
 
-    def get_camera_by_serial_number( self, serial_number ):
-        # camera
-        camera = None
+    def get_camera_by_serial_number(self, serial_number):
+        camera_list = self.get_cameras()
 
-        # loop through interfaces
-        for index in range( self.num_interfaces() ):
-            # get interface
-            interface = self.get_interface( index )
-
-            # check for camera
-            camera = interface.get_camera_by_serial_number( serial_number )
-            if( camera is None ):
-                continue
-            
-            break
-
-        # release interface
-        del interface
-
+        camera = camera_list.GetBySerial(serial_number)
+        if(camera.IsValid()):
+            pass
+        else:
+            del camera
+            camera = None
+        del camera_list
         return camera
     
     ## spinnaker
@@ -97,14 +49,13 @@ class System:
         self.system.ReleaseInstance()
 
     def get_interfaces(self, update_interface=True):
-        interface_list = self.system.GetInterfaces(update_interface)     # TODO: InterfaceList
-        return interface_list
+        return self.system.GetInterfaces(update_interface) # return spinnaker InterfaceList
 
-    def get_cameras(self, update_interfaces=True, update_cameras=True)
-        camera_list = self.system.GetCameras(update_interfaces, update_cameras) # TODO: CameraList
+    def get_cameras(self, update_interfaces=True, update_cameras=True):
+        camera_list = self.system.GetCameras(update_interfaces, update_cameras)
         return camera_list
 
-    def update_cameras(self, update_interfaces=True)
+    def update_cameras(self, update_interfaces=True):
         return self.system.UpdateCameras(update_interfaces)
 
     def update_interface_list(self):
@@ -145,7 +96,7 @@ class System:
 
     def get_library_version(self):
         library_version = self.system.GetLibraryVersion()
-        return library_version  # return spinnaker structure
+        return library_version # return spinnaker structure
 
     def get_TL_node_map(self):
         return self.system.GetTLNodeMap()

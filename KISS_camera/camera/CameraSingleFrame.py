@@ -4,11 +4,11 @@ from .Camera import Camera
 class CameraSingleFrame(Camera):
     def __init__(
         self,
-        serial_number=''
+        serial_number = None
     ):
         Camera.__init__(
             self,
-            acquisition_mode=PySpin.AcquisitionMode_SingleFrame
+            acquisition_mode = PySpin.AcquisitionMode_SingleFrame
         )
 
     def __del__(self):

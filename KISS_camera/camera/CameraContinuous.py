@@ -4,11 +4,12 @@ from .Camera import Camera
 class CameraContinuous(Camera):
     def __init__(
         self,
-        serial_number=''
+        serial_number = None
     ):
         Camera.__init__(
             self,
-            acquisition_mode=PySpin.AcquisitionMode_Continuous
+            acquisition_mode = PySpin.AcquisitionMode_Continuous,
+            serial_number = serial_number
         )
 
         Camera.begin_acquisition(self)

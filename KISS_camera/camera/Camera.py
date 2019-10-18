@@ -1,16 +1,11 @@
 from ..System import System, PySpin
 from ..Image import Image
 
-class IMAGE_DATATYPE:
-    NUMPY = 0
-    IMAGE = 1
 
 class Camera:
     # settings
-    #acquisition_mode = ACQUISITION_MODE.CONTINUOUS
     color_processing_algorithm = PySpin.HQ_LINEAR
     pixel_format = PySpin.PixelFormat_RGB8
-    image_datatype = IMAGE_DATATYPE.NUMPY
 
     # status variable
     status_acquisition = False
@@ -20,17 +15,22 @@ class Camera:
         acquisition_mode,
         index = 0,
         serial_number = None,
-        system = None,
-        image_datatype = IMAGE_DATATYPE.NUMPY
+        system = None
     ):
         # create system instance if not provided
         if( system is None ):
             self.system = System()
         
         # get camera handle
-        self.camera = self.system.get_camera_by_index( index )
-        if( self.camera is None ):
-            raise ValueError( 'index: not found' )
+        self.camera = None
+        if(serial_number is not None):
+            self.camera = self.system.get_camera_by_serial_number(serial_number)
+            if(self.camera is None):
+                raise ValueError( 'serial_number: not found' )
+        else:
+            self.camera = self.system.get_camera_by_index(index)
+            if(self.camera is None):
+                raise ValueError( 'index: not found' )
 
         # retrieve TL device nodemap
         self.nodemap_GetTLDevice = self.camera.GetTLDeviceNodeMap()
@@ -46,9 +46,6 @@ class Camera:
 
         # set pixel format
         self.set_pixel_format()
-
-        # set image_datatype
-        self.image_datatype = image_datatype
             
     def __del__( self ):
         # end acquisition if still runing
@@ -67,6 +64,9 @@ class Camera:
         if( self.system is not None ):
             del self.system
     
+    def get_system(self):
+        return self.system
+    
     def begin_acquisition( self ):
         self.camera.BeginAcquisition()
         self.status_acquisition = True
@@ -76,7 +76,7 @@ class Camera:
         self.status_acquisition = False
     
     def is_acquiring(self):
-        pass
+        raise NotImplementedError
         
     def get_image( self ):
         try:
@@ -101,25 +101,6 @@ class Camera:
             return False 
         
         return Image(image)
-
-    """
-    def __image_datatype_conversion( self, image ):
-        # image data type conversion
-        lambda_numpy = lambda image : image.GetNDArray()
-
-        datatype_conversion = {
-            IMAGE_DATATYPE.NUMPY: lambda_numpy,
-            IMAGE_DATATYPE.IMAGE: lambda image : image,
-        }.get( self.image_datatype, lambda_numpy )
-
-        img = datatype_conversion( image )
-
-        # release image if datatype has been converted
-        if( self.image_datatype != IMAGE_DATATYPE.IMAGE ):
-            del image
-        
-        return img
-    """
 
     def set_acquisition_mode( self, acquisition_mode ):
         # In order to access the node entries, they have to be casted to a pointer type (CEnumerationPtr here)
@@ -186,5 +167,3 @@ class Camera:
         #except PySpin.SpinnakerException as exception:
         print( "Error: %s" % exception )
         return False
-
-

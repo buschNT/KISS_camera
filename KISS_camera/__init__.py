@@ -8,5 +8,6 @@ from .video.VideoAVI import VideoAVI
 from .video.VideoMJPG import VideoMJPG
 from .video.VideoH264 import VideoH264
 
-#from .Interface import *
+# system
+from .Interface import Interface
 from .System import System

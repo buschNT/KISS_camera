@@ -2,14 +2,12 @@ import PySpin
 
 class Interface:
     def __init__(self, interface):
-        # interface
         self.interface = interface
 
         # nodemap from interface
         self.nodemap_interface = interface.GetTLNodeMap()
     
     def __del__( self ):
-        # release interface
         del self.interface
     
     def interface_display_name( self ):
@@ -27,52 +25,21 @@ class Interface:
 
         return interface_display_name
     
-    def num_cameras( self ):
-        # get camera list
-        cam_list = self.interface.GetCameras()
-
-        # get number of cameras
-        num_cameras = cam_list.GetSize()
-
-        # clear camera list
-        cam_list.Clear()
-
-        return num_cameras
-    
-    def get_camera(self, index):
-        # get camera list
-        cam_list = self.interface.GetCameras()
-
-        # get camera
-        try:
-            camera = cam_list[index]
-        except:
-            camera = None
-
-        # clear camera list
-        cam_list.Clear()
-
+    def get_camera_by_index(self, index):
+        camera_list = self.get_cameras()
+        camera = camera_list.GetByIndex(index)
+        del camera_list
         return camera
     
     def get_camera_by_serial_number(self, serial_number):
-        # loop through cameras
-        for index in range(self.num_cameras()):
-            # get camera
-            camera = self.get_camera(index)
-
-            # compare serial number
-            if(camera.device_serial_number() != serial_number):
-                 # release camera
-                del camera
-                continue
-            
-            return camera
-            
-        return None
+        camera_list = self.get_cameras()
+        camera = camera_list.GetBySerial(serial_number)
+        del camera_list
+        return camera
 
     ## spinnaker
     def get_cameras(self, update_cameras=True):
-        camera_list = self.interface.GetCameras(update_cameras) # TODO: implement CameraList class
+        camera_list = self.interface.GetCameras(update_cameras)
         return camera_list
     
     def unpdate_cameras(self):
