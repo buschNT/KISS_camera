@@ -1,7 +1,7 @@
 import PySpin
 
 class Interface:
-    def __init__( self, interface ):
+    def __init__(self, interface):
         # interface
         self.interface = interface
 
@@ -69,3 +69,29 @@ class Interface:
             return camera
             
         return None
+
+    ## spinnaker
+    def get_cameras(self, update_cameras=True):
+        camera_list = self.interface.GetCameras(update_cameras) # TODO: implement CameraList class
+        return camera_list
+    
+    def unpdate_cameras(self):
+        return self.interface.UpdateCameras()
+    
+    def get_TL_node_map(self):
+        return self.interface.GetTLNodeMap()
+    
+    def register_event(self):
+        raise NotImplementedError
+
+    def unregister_event(self):
+        raise NotImplementedError
+
+    def is_in_use(self):
+        return self.interface.IsInUse()
+    
+    def SendActionCommand(self):
+        raise NotImplementedError
+
+    def is_valid(self):
+        return self.interface.IsValid()
