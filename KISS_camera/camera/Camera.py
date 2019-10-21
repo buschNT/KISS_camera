@@ -3,8 +3,6 @@ from ..Image import Image
 
 
 class Camera:
-    # settings
-
     # status variable
     status_acquisition = False
 
@@ -22,20 +20,21 @@ class Camera:
         # get camera handle
         self.camera = self.get_camera_handle(serial_number, index)
 
-        # retrieve TL device node map
-        self.nodemap_GetTLDevice = self.camera.GetTLDeviceNodeMap()
+        # get TL node maps
+        self.TL_device_node_map = self.camera.GetTLDeviceNodeMap()
+        self.TL_stream_node_map = self.camera.GetTLStreamNodeMap()
 
         # initialize camera
         self.init()
 
         # retrieve GenICam nodemap
-        self.nodemap_GenICam = self.camera.GetNodeMap()
+        self.node_map = self.camera.GetNodeMap()
 
         # set aquisition mode
         self.set_acquisition_mode(acquisition_mode)
 
         # set pixel format
-        self.set_pixel_format()
+        self.set_pixel_format()   
             
     def __del__( self ):
         # end acquisition if still running
@@ -105,35 +104,67 @@ class Camera:
         
         return image
 
-    def set_acquisition_mode(self, acquisition_mode):
-        # In order to access the node entries, they have to be casted to a pointer type (CEnumerationPtr here)
-        node_acquisition_mode = PySpin.CEnumerationPtr( self.nodemap_GenICam.GetNode( "AcquisitionMode" ) )
-        if not PySpin.IsAvailable( node_acquisition_mode ) or not PySpin.IsWritable( node_acquisition_mode ):
-            print( "Unable to set acquisition mode to continuous (enum retrieval). Aborting..." )
-            return False
+    def __get_casted_node(self, name):
+        # get node
+        node_list = [
+            self.TL_device_node_map.GetNode(name),
+            self.TL_stream_node_map.GetNode(name),
+            self.node_map.GetNode(name)
+        ]
+        node_list = list(filter(None, node_list))
+        if(len(node_list) < 1):
+            return None
+        node = node_list[0]
 
-        """
-        # Retrieve entry node from enumeration node
-        node_acquisition_mode_continuous = node_acquisition_mode.GetEntryByName( "Continuous" )
-        if not PySpin.IsAvailable( node_acquisition_mode_continuous ) or not PySpin.IsReadable( node_acquisition_mode_continuous ):
-            print( "Unable to set acquisition mode to continuous (entry retrieval). Aborting..." )
-            return False
+        # type cast
+        type_cast = {
+            PySpin.intfIString: PySpin.CStringPtr,
+            PySpin.intfIInteger: PySpin.CIntegerPtr,
+            PySpin.intfIFloat: PySpin.CFloatPtr,
+            PySpin.intfIBoolean: PySpin.CBooleanPtr,
+            PySpin.intfICommand: PySpin.CCommandPtr,
+            PySpin.intfIEnumeration: PySpin.CEnumerationPtr
+        }
+        cast = type_cast.get(node.GetPrincipalInterfaceType(), None)
+        node = cast(node) # cast
+        return node
 
-        # Retrieve integer value from entry node
-        acquisition_mode_continuous = node_acquisition_mode_continuous.GetValue()
-        #acquisition_mode_continuous = PySpin.AcquisitionMode_MultiFrame
-        #print( 'acquisition_mode_continuous: ', acquisition_mode_continuous )
-        """
+    def get_node(self, name):
+        # get casted node
+        node = self.__get_casted_node(name)
+
+        # get value
+        if(PySpin.IsAvailable(node) and PySpin.IsReadable(node)):
+            node_value = node.GetValue()
+        else:
+            return None
+
+        return node_value
+
+    def set_node(self, name, value):        
+        # get casted node
+        node = self.__get_casted_node(name)
+
+        # set value
+        if(PySpin.IsAvailable(node) and PySpin.IsWritable(node)):
+            # SetIntValue/SetValue
+            if(type(node) == PySpin.CEnumerationPtr):
+                node.SetIntValue(value)
+            else:
+                node.SetValue(value)
+        else:
+            return False
         
-
-        # Set integer value from entry node as new value of enumeration node
-        node_acquisition_mode.SetIntValue(acquisition_mode)
-
         return True
+
+    # TODO: DO NOT USE!
+    def set_acquisition_mode(self, acquisition_mode):
+        return self.set_node('AcquisitionMode', acquisition_mode)
     
+    # TODO: DO NOT USE!
     def set_pixel_format(self):
         # image format setup
-        node_pixel_format = PySpin.CEnumerationPtr( self.nodemap_GenICam.GetNode("PixelFormat"))
+        node_pixel_format = PySpin.CEnumerationPtr( self.node_map.GetNode("PixelFormat"))
 
         # Retrieve entry node from enumeration node
         node_pixel_format_rgb8 = PySpin.CEnumEntryPtr(node_pixel_format.GetEntryByName("RGB8"))
@@ -148,23 +179,6 @@ class Camera:
         node_pixel_format.SetIntValue(pixel_format_rgb8)
 
         return True
-
-    def get_device_serial_number( self ):
-        node_device_serial_number = PySpin.CStringPtr( self.nodemap_GetTLDevice.GetNode( "DeviceSerialNumber" ) )
-        if( PySpin.IsAvailable( node_device_serial_number ) and PySpin.IsReadable( node_device_serial_number ) ):
-            device_serial_number = node_device_serial_number.GetValue()
-            return device_serial_number
-        
-        return None
-
-    def get_acquisition_frame_rate( self ):
-        node_acquisition_framerate = PySpin.CFloatPtr( self.nodemap_GenICam.GetNode( 'AcquisitionFrameRate' ) )
-        if( not PySpin.IsAvailable( node_acquisition_framerate ) and not PySpin.IsReadable( node_acquisition_framerate ) ):
-            print( 'Unable to retrieve frame rate. Aborting...' )
-            return None
-        acquisition_framerate = node_acquisition_framerate.GetValue()
-
-        return acquisition_framerate
 
     ## spinnaker
     def init(self):
