@@ -1,6 +1,11 @@
 from ..System import System, PySpin
 from ..Image import Image
 
+# default pixel format list
+pixel_format_list = [
+    'RGB8',
+    'Mono8'
+]
 
 class Camera:
     # status variable
@@ -9,6 +14,7 @@ class Camera:
     def __init__(
         self,
         acquisition_mode,
+        pixel_format = None,
         index = 0,
         serial_number = None,
         system = None
@@ -30,27 +36,30 @@ class Camera:
         # retrieve GenICam nodemap
         self.node_map = self.camera.GetNodeMap()
 
-        # set aquisition mode
-        self.set_acquisition_mode(acquisition_mode)
+        # set nodes
+        self.set_node('AcquisitionMode', acquisition_mode)
 
-        # set pixel format
-        self.set_pixel_format()   
+        if(pixel_format is None):
+            for pixel_format in pixel_format_list:
+                err = self.set_node('PixelFormat', pixel_format)
+                if(err):
+                    break 
             
     def __del__( self ):
         # end acquisition if still running
-        if( self.is_streaming() == True ):
+        if(self.is_streaming() == True):
             self.end_acquisition()
         
         # deinitialize camera
-        if( self.camera is not None ):
-            self.camera.DeInit()
+        if(self.camera is not None):
+            self.de_init()
 
         # release camera
-        if( self.camera is not None ):
+        if(self.camera is not None):
             del self.camera
 
         # release system if initiated by instance
-        if( self.system is not None ):
+        if(self.system is not None):
             del self.system
     
     def get_system(self):
@@ -130,7 +139,7 @@ class Camera:
         return node
 
     def get_node(self, name):
-        # get casted node
+        # get cast node
         node = self.__get_casted_node(name)
 
         # get value
@@ -142,42 +151,30 @@ class Camera:
         return node_value
 
     def set_node(self, name, value):        
-        # get casted node
+        # get cast node
         node = self.__get_casted_node(name)
 
         # set value
         if(PySpin.IsAvailable(node) and PySpin.IsWritable(node)):
-            # SetIntValue/SetValue
+            # handle IEnumeration -> SetIntValue/SetValue
             if(type(node) == PySpin.CEnumerationPtr):
-                node.SetIntValue(value)
+                # check provided value
+                try:
+                    node_by_name = PySpin.CEnumEntryPtr(node.GetEntryByName(value))
+                    if(node_by_name is not None):
+                        value = node_by_name.GetValue()
+                except:
+                    pass
+
+                try:
+                    node.SetIntValue(value)
+                except:
+                    return False
             else:
                 node.SetValue(value)
         else:
             return False
         
-        return True
-
-    # TODO: DO NOT USE!
-    def set_acquisition_mode(self, acquisition_mode):
-        return self.set_node('AcquisitionMode', acquisition_mode)
-    
-    # TODO: DO NOT USE!
-    def set_pixel_format(self):
-        # image format setup
-        node_pixel_format = PySpin.CEnumerationPtr( self.node_map.GetNode("PixelFormat"))
-
-        # Retrieve entry node from enumeration node
-        node_pixel_format_rgb8 = PySpin.CEnumEntryPtr(node_pixel_format.GetEntryByName("RGB8"))
-        if not PySpin.IsAvailable(node_pixel_format_rgb8) or not PySpin.IsReadable(node_pixel_format_rgb8):
-            print("Unable to set Pixel Format to RGB8. Aborting...")
-            return False
-
-        # Retrieve integer value from entry node
-        pixel_format_rgb8 = node_pixel_format_rgb8.GetValue()
-
-        # Set integer value from entry node as new value of enumeration node
-        node_pixel_format.SetIntValue(pixel_format_rgb8)
-
         return True
 
     ## spinnaker

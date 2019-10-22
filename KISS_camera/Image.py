@@ -66,6 +66,12 @@ class Image:
             format=PySpin.JPEG
         )
 
+    def save_as_jpg(self, filename):
+        self.save(
+            self.__save_check_filename(filename, ('.jpg', 'jpeg')),
+            format=PySpin.JPEG
+        )
+
     def save_as_jpeg2000(self, filename):
         self.save(
             self.__save_check_filename(filename, ('.jp2', '.j2k', '.jpf', '.jpg2', '.jpx', '.jpm', '.mj2', '.mjp2')),
