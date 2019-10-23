@@ -8,9 +8,6 @@ pixel_format_list = [
 ]
 
 class Camera:
-    # status variable
-    status_acquisition = False
-
     def __init__(
         self,
         acquisition_mode,
@@ -87,26 +84,32 @@ class Camera:
         
         return camera
 
-    def get_image(self):
+    def get_image(
+        self,
+        convert = True,
+        convert_pixel_format = PySpin.PixelFormat_RGB8,
+        convert_color_processing_algorithm = PySpin.HQ_LINEAR
+    ):
         try:
             # retrieve next received image
-            image_next = self.get_next_image()
+            image = self.get_next_image()
 
             # ensure image completion
-            if(image_next.is_incomplete()):
-                print("Image incomplete with image status %d ..." % image_next.get_image_status())
+            if(image.is_incomplete()):
+                print("Image incomplete with image status %d ..." % image.get_image_status())
                 return False
             
             # converted image does not affect the camera buffer (no release required)
-            pixel_format = PySpin.PixelFormat_RGB8
-            color_processing_algorithm = PySpin.HQ_LINEAR
-            image = image_next.convert(
-                format = pixel_format,
-                algorithm = color_processing_algorithm
-            )
-
-            # release image
-            image_next.release()
+            if(convert):
+                image_converted = image.convert(
+                    format = convert_pixel_format,
+                    algorithm = convert_color_processing_algorithm
+                )
+                image.release()
+                image = image_converted
+            else:
+                pass # image has to be released by user!
+            
         except Exception as e:
             print(e)
             return False 
@@ -150,7 +153,7 @@ class Camera:
 
         return node_value
 
-    def set_node(self, name, value):        
+    def set_node(self, name, value):
         # get cast node
         node = self.__get_casted_node(name)
 
@@ -176,6 +179,15 @@ class Camera:
             return False
         
         return True
+    
+    def get_pixel_format_list(self):
+        pixel_format_list = []
+        node = self.__get_casted_node('PixelFormat')
+        entries_list = node.GetEntries()
+        for entry in entries_list:
+            test = PySpin.CEnumEntryPtr(entry)
+            pixel_format_list.append(test.GetSymbolic())
+        return pixel_format_list
 
     ## spinnaker
     def init(self):
