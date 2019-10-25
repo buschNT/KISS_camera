@@ -20,4 +20,4 @@ You can also install the package with a symlink, so that changes to the source f
 You might need to choose your python version:  
 `$ C:\...\python.exe -m pip install -e .`
 
-I recommend a virtual environment.
+I use a virtual environment.
