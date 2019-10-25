@@ -1,6 +1,5 @@
 # import
 import os
-import uuid
 from KISS_camera import CameraSingleFrame
 
 # settings
